@@ -1,0 +1,26 @@
+[project]
+name = "aivoice-agent"
+version = "0.1.0"
+description = "Local voice assistant built with LiveKit, Kyutai STT/TTS, and Ollama"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+  { name = "innotelinc" }
+]
+dependencies = [
+  "livekit-agents[mcp,openai,silero]>=1.5.17",
+  "livekit-plugins-openai>=1.5.17",
+  "livekit-plugins-silero>=1.5.17",
+  "livekit-plugins-deepgram>=1.5.17",
+  "livekit-plugins-turn-detector>=1.5.17",
+  "python-dotenv>=1.1.0",
+  "pydantic>=2.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+package = false

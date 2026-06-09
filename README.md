@@ -1,146 +1,96 @@
-# Kotai - Local Voice Assistant with Kyutai TTS/STT and LiveKit
+# AIVoice Agent
 
-[![Watch the Demo](https://img.youtube.com/vi/PHFrchtDIoE/0.jpg)](https://youtu.be/PHFrchtDIoE)
-## 🔊 Overview
+A local-first voice assistant built with LiveKit, Kyutai speech models, and Ollama.
 
-Kotai is a fully local, zero-cost voice assistant that combines the power of Kyutai TTS/STT, LiveKit, and local LLMs to create natural conversational experiences. This project eliminates the need for cloud-based API services by integrating:
+## Features
+- Fully local STT, TTS, and LLM runtime
+- LiveKit-based realtime voice sessions
+- Kyutai STT on `localhost:8080`
+- Kyutai TTS on `localhost:8000`
+- Ollama-backed LLM (`gemma3n:latest` by default)
+- English-first assistant with optional French support
 
-- **Kyutai TTS** for high-quality speech synthesis
-- **Kyutai STT** for accurate speech-to-text conversion
-- **LiveKit** for real-time voice communication
-- **Ollama** for running local large language models (Gemma3n)
+## Architecture
+- **LiveKit** handles the voice session and agent runtime
+- **Kyutai STT** provides OpenAI-compatible transcription
+- **Ollama** provides the local LLM
+- **Kyutai TTS** provides OpenAI-compatible speech synthesis
 
-The result is a voice assistant with natural speech capabilities and intelligent conversation management - all running completely on your local machine.
-
-## ✨ Features
-
-- 🎯 **100% Local** - No API costs or cloud dependencies
-- 🗣️ **Natural Speech** - High-quality voice synthesis with Kyutai TTS
-- 🎙️ **Real-time Conversation** - Fluid interaction through LiveKit
-- 🧠 **Local LLM Integration** - Uses Ollama to run Gemma3n locally
-- 👂 **Advanced Speech Recognition** - Fast local transcription with Kyutai STT
-- 🤖 **Optimized System Prompt** - Designed specifically for smaller LLMs
-- 🌍 **Bilingual Support** - English and French language support
-- 💬 **Conversation Management** - Handles errors, silence, and emotional intelligence
-
-## 📋 Prerequisites
-
-Before running Kotai, you’ll need:
-
+## Requirements
 - Python 3.12
-- Kyutai TTS server running on `http://localhost:8000/v1`
-- Repo: https://github.com/dwain-barnes/kyutai-tts-openai-api
-- Kyutai STT server running on `http://localhost:8080/v1`
-- Repo: https://github.com/dwain-barnes/kyutai-stt-openai-api  
-- Ollama installed with the Gemma3n model
-- LiveKit server access
+- A LiveKit server
+- Kyutai STT service reachable at `http://localhost:8080/v1`
+- Kyutai TTS service reachable at `http://localhost:8000/v1`
+- Ollama with `gemma3n:latest`
 
-## 🚀 Installation
+## Quick start
 
-See youtube video
+### 1. Clone and create the venv
+```bash
+git clone https://github.com/innotelinc/aivoice-agent.git
+cd aivoice-agent
+uv venv --python /usr/bin/python3 .venv
+source .venv/bin/activate
+uv pip install -U pip setuptools wheel
+uv pip install -e .
+```
 
-Create a `.env.local` file with your configuration:
+### 2. Create `.env.local`
+Copy the included example:
+
+```bash
+cp .env.local.example .env.local
+```
+
+Then set:
 
 ```env
-# Your LiveKit configuration
-LIVEKIT_URL=your_livekit_url
-LIVEKIT_API_KEY=your_api_key
-LIVEKIT_API_SECRET=your_api_secret
+LIVEKIT_URL=ws://127.0.0.1:7880
+LIVEKIT_API_KEY=your_livekit_api_key
+LIVEKIT_API_SECRET=your_livekit_api_secret
 ```
 
-## 💬 Usage
+### 3. Start dependencies
+You need these services running before starting the agent:
 
-1. Make sure the Kyutai TTS server is running (default: `http://localhost:8000/v1`)
-1. Make sure the Kyutai STT server is running (default: `http://localhost:8080/v1`)
-1. Make sure Ollama is running with the Gemma3n model loaded:
-  
-   ```bash
-   ollama run gemma3n:latest
-   ```
-1. Run the voice assistant:
-  
-   ```bash
-   python agent.py
-   ```
-1. Connect to the LiveKit room and start interacting with Kotai
+- LiveKit server
+- Kyutai STT on `127.0.0.1:8080`
+- Kyutai TTS on `127.0.0.1:8000`
+- Ollama API on `127.0.0.1:11434`
+- Ollama model `gemma3n:latest`
 
-## 🔧 How It Works
-
-The system consists of several integrated components:
-
-- **Speech-to-Text (STT)**: Uses Kyutai STT for local transcription
-- **Language Model**: Connects to a local Ollama instance running Gemma3n
-- **Text-to-Speech (TTS)**: Kyutai TTS for natural speech synthesis
-- **Voice Pipeline**: Handles the flow between components via LiveKit
-- **Optimized Prompt System**: Comprehensive system prompt designed for smaller LLMs
-
-Kotai features an intelligent conversation system that:
-
-- Handles speech transcription errors gracefully
-- Manages conversation flow and silence
-- Adapts to user energy levels and preferences
-- Provides emotional intelligence and support
-
-## 🔄 Customization
-
-You can modify the `agent.py` file to:
-
-- **Change the voice** by editing the `voice` parameter in the TTS setup
-- **Modify the personality** by editing the system prompt classes
-- **Adjust the LLM model** by changing the Ollama model name in `get_readable_llm_name()`
-- **Configure different endpoints** for any of the services
-- **Switch languages** by modifying the `LanguageCode` settings
-
-## 📝 Code Explanation
-
-The main workflow in `agent.py` dev:
-
-```python
-# 1) Speech-to-Text with Kyutai STT
-stt=openai.STT(
-    base_url="http://localhost:8080/v1",
-    api_key="dummy_key",
-    model="whisper-1",
-    language="en",
-)
-
-# 2) Language Model from Ollama
-llm = openai.LLM.with_ollama(model="gemma3n:latest")
-
-# 3) Text-to-Speech using Kyutai TTS
-tts=openai.TTS.create_kyutai_client(
-    model="tts-1",
-    voice="nova",
-    speed=1.1,
-    base_url="http://localhost:8000/v1"
-)
-
-# 4) Create Agent with optimized system prompt
-class MyAgent(Agent):
-    def __init__(self) -> None:
-        prompt_generator = SmalltalkInstructions()
-        system_prompt = prompt_generator.make_system_prompt()
-        super().__init__(instructions=system_prompt)
+### 4. Run the agent
+```bash
+source .venv/bin/activate
+python agent.py dev
 ```
 
-## 🤖 System Prompt Features
+For interactive local console testing:
 
-Kotai includes a sophisticated system prompt optimized for smaller LLMs:
+```bash
+python agent.py console --text --log-level debug
+```
 
-- **Personality**: Helpful, curious, genuine, and slightly playful
-- **Conversation Management**: Handles stuck conversations, emotional support, and knowledge gaps
-- **Speech Error Handling**: Gracefully manages transcription mistakes
-- **Conversation Depth**: Adapts to user preferences for light or deep discussion
-- **Bilingual Support**: Seamless English/French switching
-- **Topic Boundaries**: Thoughtful handling of sensitive subjects
+## Verified local endpoints
+A working local stack should return:
 
-## 📜 License
+```bash
+curl http://127.0.0.1:7880/
+curl http://127.0.0.1:8080/health
+curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:11434/api/tags
+```
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## Notes
+- `.env.local` is intentionally gitignored
+- `.env.local.example` is the safe template to commit
+- This repo uses current LiveKit OpenAI-compatible TTS wiring via `openai.TTS(...)`
+- Docker is optional if you run the Kyutai and Ollama stack rootlessly
 
-## 🙏 Acknowledgments
+## Repo contents
+- `agent.py` — main LiveKit voice agent
+- `.env.local.example` — environment template
+- `pyproject.toml` — install metadata and dependencies
 
-- [Kyutai] for the excellent TTS and STT models
-- [LiveKit]for the real-time communication platform
-- [Ollama]
-
+## License
+MIT
