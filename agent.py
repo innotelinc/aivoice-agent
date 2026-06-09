@@ -6,8 +6,8 @@ from pydantic import BaseModel
 
 from dotenv import load_dotenv
 
-from livekit.agents import Agent, AgentSession, JobContext, WorkerOptions, cli, mcp
-from livekit.plugins import deepgram, openai, silero
+from livekit.agents import Agent, AgentSession, JobContext, WorkerOptions, cli
+from livekit.plugins import openai, silero
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
 
@@ -169,7 +169,13 @@ async def entrypoint(ctx: JobContext):
         use_realtime=False,
     ),
         llm = openai.LLM.with_ollama(model="gemma3n:latest"),
-        tts=openai.TTS.create_kyutai_client(model="tts-1",voice="nova", speed=1.1, base_url="http://localhost:8000/v1"),
+        tts=openai.TTS(
+            model="tts-1",
+            voice="nova",
+            speed=1.1,
+            base_url="http://localhost:8000/v1",
+            api_key="dummy-key",
+        ),
         turn_detection=MultilingualModel(),
     )
 
